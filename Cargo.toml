@@ -1,0 +1,7 @@
+[package]
+name = "seinbot-rs"
+version = "0.1.0"
+authors = ["arosspope <andrew.pope456@gmail.com>"]
+edition = "2018"
+
+[dependencies]
