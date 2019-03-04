@@ -7,3 +7,5 @@ description = "A seinfeld twitter bot using markov chains in rust."
 license = "Apache-2.0"
 
 [dependencies]
+markov = "1.0.*"
+egg-mode = "0.12.0"
