@@ -40,13 +40,12 @@ fn choose_actor() -> PathBuf {
 fn markov_gen(script: PathBuf) -> Vec<String> {
     // Lower order: more random crazy stuff
     // Higher order: more likely to match original line (will need to strip text of punctuation - sentences on new lines)
-    
-    // TODO: Strip </font>
     // TODO: Strip opening/closing brackets that aren't a pair
     
     let mut chain = Chain::of_order(2);
     chain.feed_file(script).unwrap();
     
+    // Generate a random set of of sentences (between 1 and 5)
     let mut rng = thread_rng();
-    chain.str_iter_for(rng.gen_range(1, 5)).map(|s| s.replace("</font>", "")).collect()
+    chain.str_iter_for(rng.gen_range(1, 5)).collect()
 }
