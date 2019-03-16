@@ -28,14 +28,12 @@ fn choose_actor() -> PathBuf {
 }
 
 fn generate_lines(script: PathBuf) -> Vec<String> {
-    // Lower order: more random crazy stuff
-    // Higher order: more likely to match original line (will need to strip text of punctuation - sentences on new lines)
-    // TODO: Strip opening/closing brackets that aren't a pair
-    
+    // Order of 2 seems to be the sweet spot in generating crazy text
     let mut chain = Chain::of_order(2);
     chain.feed_file(script).unwrap();
     
     // Generate a random set of of sentences (between 1 and 5)
+    // TODO: Strip opening/closing brackets that aren't a pair
     let mut rng = thread_rng();
     chain.str_iter_for(rng.gen_range(1, 5)).map(|s| capitalise_sentence(&s)).collect()
 }
