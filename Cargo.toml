@@ -4,7 +4,7 @@ version = "0.1.0"
 authors = ["arosspope <andrew.pope456@gmail.com>"]
 edition = "2018"
 description = "A seinfeld twitter bot using markov chains in rust."
-license = "Apache-2.0"
+license = "MIT"
 
 [dependencies]
 markov = "1.0.*"
