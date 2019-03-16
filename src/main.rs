@@ -11,24 +11,14 @@ use rand::seq::SliceRandom;
 
 
 fn main() {
-    let actor_file = choose_actor();
-    let actor = actor_file.display().to_string().replace("actors/", "").replace(".txt", "");
+    let script_file = choose_actor();
+    let actor = script_file.display().to_string().replace("actors/", "").replace(".txt", "");
     
-    print!("[{}] ", actor);
-    for s in markov_gen(actor_file) {
-        print!("{} ", capitalise_sentence(&s));
-    }
-    println!("")
+    let line = generate_lines(script_file).join(" ");
+    let formatted = format!("[{}] {}", actor, line);
+    
+    println!("{}", formatted);
 }
-
-fn capitalise_sentence(s: &str) -> String {
-    let mut c = s.chars();
-    match c.next() {
-        None => String::new(),
-        Some(f) => f.to_uppercase().collect::<String>() + c.as_str(),
-    }
-}
-
 
 fn choose_actor() -> PathBuf {
     let files: Vec<PathBuf> = glob("actors/*.txt").unwrap().filter_map(Result::ok).collect();
@@ -37,7 +27,7 @@ fn choose_actor() -> PathBuf {
     actor.to_owned()
 }
 
-fn markov_gen(script: PathBuf) -> Vec<String> {
+fn generate_lines(script: PathBuf) -> Vec<String> {
     // Lower order: more random crazy stuff
     // Higher order: more likely to match original line (will need to strip text of punctuation - sentences on new lines)
     // TODO: Strip opening/closing brackets that aren't a pair
@@ -47,5 +37,13 @@ fn markov_gen(script: PathBuf) -> Vec<String> {
     
     // Generate a random set of of sentences (between 1 and 5)
     let mut rng = thread_rng();
-    chain.str_iter_for(rng.gen_range(1, 5)).collect()
+    chain.str_iter_for(rng.gen_range(1, 5)).map(|s| capitalise_sentence(&s)).collect()
+}
+
+fn capitalise_sentence(s: &str) -> String {
+    let mut c = s.chars();
+    match c.next() {
+        None => String::new(),
+        Some(f) => f.to_uppercase().collect::<String>() + c.as_str(),
+    }
 }
