@@ -3,8 +3,6 @@ extern crate serde_derive;
 extern crate chrono;
 extern crate futures;
 extern crate glob;
-#[macro_use]
-extern crate log;
 extern crate markov;
 extern crate rand;
 extern crate serde_json;
@@ -12,15 +10,29 @@ extern crate tokio;
 extern crate tokio_core;
 
 use glob::glob;
+use log::{info};
 use markov::Chain;
 use rand::seq::SliceRandom;
 use rand::{thread_rng, Rng};
 use std::path::{Path, PathBuf};
+use getopts::Options;
+use std::env;
 
 mod config;
 mod twitter;
 
+const TWEET_CHARACTER_LIMIT: usize = 280;
+
 fn main() {
+    // Parse command line options
+    let args: Vec<String> = env::args().collect();
+    let mut opts = Options::new();
+    opts.optflag("p", "post", "will post the generated message to twitter");
+    let matches = match opts.parse(&args[1..]) {
+        Ok(m) => { m }
+        Err(f) => { panic!(f.to_string()) }
+    };
+    
     // Load configuration and create handle to twitter bot
     let conf = config::Config::read(Path::new("twitter-secrets.json")).expect("loading secrets failed");
     let mut bot = twitter::TwitterBot::new(conf);
@@ -29,29 +41,51 @@ fn main() {
     let history = bot.history(200);
     
     // Choose the next actor to tweet, ignoring the last one who posted
-    let script_file = choose_actor("actors", last_actor(history));
-    let actor = script_file
+    let script = choose_script("actors", last_actor(&history));
+    let actor = script
         .display()
         .to_string()
         .replace("actors/", "")
         .replace(".txt", "");
-        
     info!("choose {} to tweet", actor);
     
-    let line = generate_lines(script_file).join(" ");
-    let formatted = format!("[{}] {}", actor, line);
+    // Now the fun part! Generate markov text!
+    let mut tweet: String;
+    loop {
+        let statement = generate_content(&script).join(" ");
+        tweet = format!("[{}] {}", actor, statement);
+        
+        // Make sure tweet is within post limit
+        if tweet.len() > TWEET_CHARACTER_LIMIT {
+            continue;
+        }
+        
+        // Check that the statement has not already been said
+        if history.iter().any(|t| t == &tweet) {
+            continue;
+        }
+        
+        // We've passed all the checks
+        break;
+    }
 
-    println!("{}", formatted);
+    // Print to terminal and post to twitter!
+    println!("{}", tweet);
+    if matches.opt_present("p") {
+        info!("posting to twitter");
+        bot.tweet(&tweet);
+    }
 }
 
-fn choose_actor(script_location: &str, ignore_actor: Option<String>) -> PathBuf {
-    let mut files: Vec<PathBuf> = glob(&format!("{}/*.txt", script_location))
+/// Randomly choose a script from the scripts folder
+fn choose_script(script_location: &str, ignore_actor: Option<String>) -> PathBuf {
+    let mut scripts: Vec<PathBuf> = glob(&format!("{}/*.txt", script_location))
         .unwrap()
         .filter_map(Result::ok)
         .collect();
         
     if let Some(ignore) = ignore_actor.clone() {
-        files = files
+        scripts = scripts
             .into_iter()
             .filter(|s| s != &PathBuf::from(format!("{}/{}.txt", script_location, ignore)))
             .collect();
@@ -59,11 +93,12 @@ fn choose_actor(script_location: &str, ignore_actor: Option<String>) -> PathBuf 
     
     info!("choosing actors and ignoring {}", ignore_actor.unwrap_or(String::from("nobody")));
     let mut rng = thread_rng();
-    let actor = files.choose(&mut rng).expect("the stage is not set");
-    actor.to_owned()
+    let script = scripts.choose(&mut rng).expect("the stage is not set");
+    script.to_owned()
 }
 
-fn generate_lines(script: PathBuf) -> Vec<String> {
+/// Generate content based on the input script file
+fn generate_content(script: &PathBuf) -> Vec<String> {
     // Order of 2 seems to be the sweet spot in generating crazy text
     let mut chain = Chain::of_order(2);
     chain.feed_file(script).unwrap();
@@ -80,6 +115,7 @@ fn generate_lines(script: PathBuf) -> Vec<String> {
         .collect()
 }
 
+/// Capitalise a sentence
 fn capitalise_sentence(s: &str) -> String {
     let mut c = s.chars();
     match c.next() {
@@ -89,7 +125,7 @@ fn capitalise_sentence(s: &str) -> String {
 }
 
 /// Based on previous tweet history, find the last actor who tweeted
-fn last_actor(tweets: Vec<String>) -> Option<String> {
+fn last_actor(tweets: &[String]) -> Option<String> {
     if tweets.len() > 0 {
         let actor = tweets[0]
             .split(' ')
@@ -99,7 +135,7 @@ fn last_actor(tweets: Vec<String>) -> Option<String> {
             .replace("]", "");
 
         return Some(actor);
-    }    
+    }
     
     None
 }
