@@ -27,7 +27,7 @@ fn main() {
     // Parse command line options
     let args: Vec<String> = env::args().collect();
     let mut opts = Options::new();
-    opts.optflag("p", "post", "will post the generated message to twitter");
+    opts.optflag("t", "post-to-twitter", "will post the generated message to twitter");
     let matches = match opts.parse(&args[1..]) {
         Ok(m) => { m }
         Err(f) => { panic!(f.to_string()) }
@@ -71,7 +71,7 @@ fn main() {
 
     // Print to terminal and post to twitter!
     println!("{}", tweet);
-    if matches.opt_present("p") {
+    if matches.opt_present("t") {
         info!("posting to twitter");
         bot.tweet(&tweet);
     }
