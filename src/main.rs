@@ -3,6 +3,8 @@ extern crate serde_derive;
 extern crate chrono;
 extern crate futures;
 extern crate glob;
+#[macro_use]
+extern crate log;
 extern crate markov;
 extern crate rand;
 extern crate serde_json;
@@ -14,34 +16,48 @@ use markov::Chain;
 use rand::seq::SliceRandom;
 use rand::{thread_rng, Rng};
 use std::path::{Path, PathBuf};
-use tokio_core::reactor::Core;
 
 mod config;
 mod twitter;
 
 fn main() {
-    let mut core = Core::new().unwrap();
-    let conf = config::Config::read(Path::new("twitter-secrets.json"));
-    let bot = twitter::TwitterBot::new(&mut core, conf.unwrap());
-
-    let script_file = choose_actor();
+    // Load configuration and create handle to twitter bot
+    let conf = config::Config::read(Path::new("twitter-secrets.json")).expect("loading secrets failed");
+    let mut bot = twitter::TwitterBot::new(conf);
+    
+    // Get the tweet history of the bot for analysis
+    let history = bot.history(200);
+    
+    // Choose the next actor to tweet, ignoring the last one who posted
+    let script_file = choose_actor("actors", last_actor(history));
     let actor = script_file
         .display()
         .to_string()
         .replace("actors/", "")
         .replace(".txt", "");
-
+        
+    info!("choose {} to tweet", actor);
+    
     let line = generate_lines(script_file).join(" ");
     let formatted = format!("[{}] {}", actor, line);
 
     println!("{}", formatted);
 }
 
-fn choose_actor() -> PathBuf {
-    let files: Vec<PathBuf> = glob("actors/*.txt")
+fn choose_actor(script_location: &str, ignore_actor: Option<String>) -> PathBuf {
+    let mut files: Vec<PathBuf> = glob(&format!("{}/*.txt", script_location))
         .unwrap()
         .filter_map(Result::ok)
         .collect();
+        
+    if let Some(ignore) = ignore_actor.clone() {
+        files = files
+            .into_iter()
+            .filter(|s| s != &PathBuf::from(format!("{}/{}.txt", script_location, ignore)))
+            .collect();
+    }
+    
+    info!("choosing actors and ignoring {}", ignore_actor.unwrap_or(String::from("nobody")));
     let mut rng = thread_rng();
     let actor = files.choose(&mut rng).expect("the stage is not set");
     actor.to_owned()
@@ -70,4 +86,20 @@ fn capitalise_sentence(s: &str) -> String {
         None => String::new(),
         Some(f) => f.to_uppercase().collect::<String>() + c.as_str(),
     }
+}
+
+/// Based on previous tweet history, find the last actor who tweeted
+fn last_actor(tweets: Vec<String>) -> Option<String> {
+    if tweets.len() > 0 {
+        let actor = tweets[0]
+            .split(' ')
+            .collect::<Vec<&str>>()
+            .first().expect("tweet is not in expected format")
+            .replace("[", "")
+            .replace("]", "");
+
+        return Some(actor);
+    }    
+    
+    None
 }
