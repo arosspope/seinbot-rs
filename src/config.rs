@@ -1,3 +1,4 @@
+use log::info;
 use serde_derive::{Deserialize, Serialize};
 use std::env;
 use std::fs::File;
@@ -26,6 +27,7 @@ impl Config {
 
     /// This should only be called as a fallback
     pub fn from_env() -> Config {
+        info!("loading from system environment");
         let consumer_key = match env::var("SEINBOT_CONSUMER_KEY") {
             Ok(val) => val,
             Err(_) => panic!("couldn't find consumer key"),
