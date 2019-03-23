@@ -1,0 +1,20 @@
+service: seinbot-rs-service
+provider:
+  name: aws
+  runtime: rust
+  environment:
+    SEINBOT_CONSUMER_KEY: ${file(twitter-secrets.json):consumer_key}
+    SEINBOT_CONSUMER_SECRET: ${file(twitter-secrets.json):consumer_secret}
+    SEINBOT_ACCESS_KEY: ${file(twitter-secrets.json):access_key}
+    SEINBOT_ACCESS_SECRET: ${file(twitter-secrets.json):access_secret}
+plugins:
+  - serverless-rust
+package:
+  include: 
+    - '**actors/*.txt'
+  individually: true
+functions:
+  seinbot_lambda:
+    handler: seinbot-rs
+    events:
+      - schedule: rate(24 hours)

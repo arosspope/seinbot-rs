@@ -1,45 +1,58 @@
+use lambda_runtime::{error::HandlerError, lambda, Context};
 use getopts::Options;
 use glob::glob;
-use log::info;
+use log::{self, info, error};
 use markov::Chain;
 use rand::seq::SliceRandom;
 use rand::{thread_rng, Rng};
-use std::env;
+use std::{env, fs};
 use std::path::{Path, PathBuf};
+use simple_error::{try_with, bail};
+use simple_logger;
+use std::error::Error;
+use serde_derive::{Deserialize};
 
 mod config;
 mod twitter;
 
 const TWEET_CHARACTER_LIMIT: usize = 280;
 
-fn main() {
-    // Parse command line options
-    let args: Vec<String> = env::args().collect();
-    let mut opts = Options::new();
-    opts.optflag(
-        "t",
-        "post-to-twitter",
-        "will post the generated message to twitter",
-    );
-    let matches = match opts.parse(&args[1..]) {
-        Ok(m) => m,
-        Err(f) => panic!(f.to_string()),
+#[derive(Deserialize)]
+struct SeinbotPostEvent {}
+
+
+fn main() -> Result<(), Box<dyn Error>> {
+    simple_logger::init_with_level(log::Level::Debug)?; 
+    lambda!(seinbot_lambda);
+    Ok(())   
+}
+
+
+fn seinbot_lambda(_: SeinbotPostEvent, _: Context) -> Result<(), HandlerError> {
+    let conf = match config::Config::from_env() {
+        Ok(c) => c,
+        Err(_) => bail!("failed to load file"),
     };
-
-    // Load configuration and create handle to twitter bot
-    let conf = config::Config::read(Path::new("twitter-secrets.json"));
-    let mut bot = twitter::TwitterBot::new(conf);
-
+    
+    // let current_dir = env::current_dir().unwrap();
+    
     // Get the tweet history of the bot for analysis
+    let mut bot = twitter::TwitterBot::new(conf);
     let history = bot.history(200);
-
+    
     // Choose the next actor to tweet, ignoring the last one who posted
-    let script = choose_script("actors", last_actor(&history));
+    let path = format!("{}/actors", env::var("LAMBDA_TASK_ROOT").unwrap());
+    let script = match choose_script(&path, last_actor(&history)) {
+        Ok(s) => s,
+        Err(_) => bail!("failed to load script"),
+    };
+    
     let actor = script
         .display()
         .to_string()
-        .replace("actors/", "")
+        .replace(&format!("{}/", path), "")
         .replace(".txt", "");
+    
     info!("choose {} to tweet", actor);
 
     // Now the fun part! Generate markov text!
@@ -62,16 +75,14 @@ fn main() {
         break;
     }
 
-    // Print to terminal and post to twitter!
-    println!("{}", tweet);
-    if matches.opt_present("t") {
-        info!("posting to twitter");
-        bot.tweet(&tweet);
-    }
+    // Post to twitter!
+    info!("posting: {}", tweet);
+    bot.tweet(&tweet);
+    Ok(())
 }
 
 /// Randomly choose a script from the scripts folder
-fn choose_script(script_location: &str, ignore_actor: Option<String>) -> PathBuf {
+fn choose_script(script_location: &str, ignore_actor: Option<String>) -> Result<PathBuf, Box<Error>> {
     let mut scripts: Vec<PathBuf> = glob(&format!("{}/*.txt", script_location))
         .unwrap()
         .filter_map(Result::ok)
@@ -83,14 +94,19 @@ fn choose_script(script_location: &str, ignore_actor: Option<String>) -> PathBuf
             .filter(|s| s != &PathBuf::from(format!("{}/{}.txt", script_location, ignore)))
             .collect();
     }
-
+    
+    info!("{:?}", scripts);
+    
+    info!("{}:{}", env::var("PATH").unwrap(), env::var("LAMBDA_TASK_ROOT").unwrap());
+    
     info!(
         "choosing actors and ignoring {}",
         ignore_actor.unwrap_or(String::from("nobody"))
     );
+    
     let mut rng = thread_rng();
     let script = scripts.choose(&mut rng).expect("the stage is not set");
-    script.to_owned()
+    Ok(script.to_owned())
 }
 
 /// Generate content based on the input script file

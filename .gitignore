@@ -11,3 +11,7 @@ Cargo.lock
 
 # Ignore secrets
 *.json
+
+# Ignore node modules
+node_modules
+.serverless
