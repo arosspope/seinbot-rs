@@ -1,4 +1,4 @@
-service: seinbot-rs-service
+service: seinbot-rs
 provider:
   name: aws
   runtime: rust
@@ -9,12 +9,18 @@ provider:
     SEINBOT_ACCESS_SECRET: ${file(twitter-secrets.json):access_secret}
 plugins:
   - serverless-rust
+  - serverless-webpack
+  - copy-webpack-plugin
 package:
-  include: 
-    - '**actors/*.txt'
   individually: true
+  include: 
+    - actors
 functions:
   seinbot_lambda:
     handler: seinbot-rs
     events:
       - schedule: rate(24 hours)
+
+custom:
+  webpack:
+    webpackConfig: 'webpack.config.js'   # Name of webpack configuration file

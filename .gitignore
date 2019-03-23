@@ -10,8 +10,9 @@ Cargo.lock
 **/*.rs.bk
 
 # Ignore secrets
-*.json
+twitter-secrets.json
 
 # Ignore node modules
 node_modules
 .serverless
+*.zip

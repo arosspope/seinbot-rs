@@ -41,8 +41,7 @@ fn seinbot_lambda(_: SeinbotPostEvent, _: Context) -> Result<(), HandlerError> {
     let history = bot.history(200);
     
     // Choose the next actor to tweet, ignoring the last one who posted
-    let path = format!("{}/actors", env::var("LAMBDA_TASK_ROOT").unwrap());
-    let script = match choose_script(&path, last_actor(&history)) {
+    let script = match choose_script("actors", last_actor(&history)) {
         Ok(s) => s,
         Err(_) => bail!("failed to load script"),
     };
@@ -50,7 +49,7 @@ fn seinbot_lambda(_: SeinbotPostEvent, _: Context) -> Result<(), HandlerError> {
     let actor = script
         .display()
         .to_string()
-        .replace(&format!("{}/", path), "")
+        .replace("actors/", "")
         .replace(".txt", "");
     
     info!("choose {} to tweet", actor);
@@ -87,7 +86,9 @@ fn choose_script(script_location: &str, ignore_actor: Option<String>) -> Result<
         .unwrap()
         .filter_map(Result::ok)
         .collect();
-
+        
+    info!("{:?}", scripts);
+    
     if let Some(ignore) = ignore_actor.clone() {
         scripts = scripts
             .into_iter()
@@ -95,9 +96,7 @@ fn choose_script(script_location: &str, ignore_actor: Option<String>) -> Result<
             .collect();
     }
     
-    info!("{:?}", scripts);
     
-    info!("{}:{}", env::var("PATH").unwrap(), env::var("LAMBDA_TASK_ROOT").unwrap());
     
     info!(
         "choosing actors and ignoring {}",
