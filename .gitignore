@@ -12,7 +12,7 @@ Cargo.lock
 # Ignore secrets
 twitter-secrets.json
 
-# Ignore node modules
+# Ignore aws serverless stuff
 node_modules
 .serverless
 *.zip
