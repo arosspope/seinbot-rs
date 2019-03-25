@@ -6,19 +6,21 @@
 // mod kramer;
 // mod newman;
 use markov::Chain;
-use rand::{thread_rng, Rng};
+use rand::{thread_rng, Rng, seq::SliceRandom};
 
 use super::jerry::JERRY;
 
 pub struct Actor {
     pub name: String,
-    lines: Vec<String>,
-    markov_order: usize,
+    pub lines: Vec<String>,
+    pub markov_order: usize,
 }
 
 pub fn choose_actor(ignore: &str) -> &Actor {
     let mut rng = thread_rng();
-    let actors = vec![JERRY];
+    let actors = vec![
+        JERRY
+    ];
     actors.into_iter()
         .filter(|&a| a.name != ignore)
         .collect::<Vec<Actor>>()

@@ -1,8 +1,8 @@
 use super::actor::Actor;
 
-pub const JERRY: Actor = {
-    name: String::from("jerry"),
-    lines: JERRY_LINES.to_owned(),
+pub const JERRY: Actor = Actor {
+    name: "jerry".to_string(),
+    lines: JERRY_LINES.iter().map(|&s| String::from(s)).collect(),
     markov_order: 2,
 };
 
@@ -314,7 +314,7 @@ const JERRY_LINES: [&str; 23770] = [
   "(looking at her) How about that.",
   "Oh!",
   "No it's Sally Weaver.",
-  "I tell you what they should do, they should combine the two jobs, make it one job, 'cop\garbage man'.",
+  "I tell you what they should do, they should combine the two jobs, make it one job, 'cop/garbage man'.",
   "I always see cops walking around with nothing to do.",
   "Grab a broom!",
   "Start sweeping.",
