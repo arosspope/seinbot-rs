@@ -16,3 +16,4 @@ twitter-secrets.json
 node_modules
 .serverless
 *.zip
+package-lock.json

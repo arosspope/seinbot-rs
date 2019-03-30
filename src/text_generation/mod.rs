@@ -1,4 +1,8 @@
 pub mod actor;
 
-// private for actor.rs only
-mod jerry;
+pub mod elaine;
+pub mod george;
+pub mod jerry;
+pub mod kramer;
+pub mod newman;
+pub mod frank;

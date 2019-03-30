@@ -1,11 +1,9 @@
 use log::info;
 use serde_derive::{Deserialize, Serialize};
 use std::env;
+use std::error::Error;
 use std::fs::File;
 use std::path::Path;
-use std::error::Error;
-use simple_error::bail;
-use std::fmt;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Config {
@@ -19,32 +17,16 @@ impl Config {
     pub fn read(path_file: &Path) -> Config {
         let mut file = File::open(path_file).expect("failed to open file");
 
-        serde_json::from_reader(&mut file)
-            .ok()
-            .unwrap()
+        serde_json::from_reader(&mut file).ok().unwrap()
     }
 
-    pub fn from_env() -> Result<Config, Box<Error>> {
+    pub fn from_env() -> Result<Config, Box<dyn Error>> {
         info!("loading secrets from system environment");
-        let consumer_key = match env::var("SEINBOT_CONSUMER_KEY") {
-            Ok(val) => val,
-            Err(_) => bail!("couldn't find consumer key"),
-        };
 
-        let consumer_secret = match env::var("SEINBOT_CONSUMER_SECRET") {
-            Ok(val) => val,
-            Err(_) => bail!("couldn't find consumer secret"),
-        };
-
-        let access_key = match env::var("SEINBOT_ACCESS_KEY") {
-            Ok(val) => val,
-            Err(_) => bail!("couldn't find access key"),
-        };
-
-        let access_secret = match env::var("SEINBOT_ACCESS_SECRET") {
-            Ok(val) => val,
-            Err(_) => bail!("couldn't find access secret"),
-        };
+        let consumer_key = env::var("SEINBOT_CONSUMER_KEY")?;
+        let consumer_secret = env::var("SEINBOT_CONSUMER_SECRET")?;
+        let access_key = env::var("SEINBOT_ACCESS_KEY")?;
+        let access_secret = env::var("SEINBOT_ACCESS_SECRET")?;
 
         Ok(Config {
             consumer_key,

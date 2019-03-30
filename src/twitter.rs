@@ -46,10 +46,14 @@ impl TwitterBot {
         let handle = self.core.handle();
         let home = egg_mode::tweet::user_timeline(self.user_id, false, false, &self.token, &handle)
             .with_page_size(max_records as i32);
-        let (_, feed) = self
-            .core
-            .run(home.start())
-            .expect("unable to load bot feed");
+
+        let feed = match self.core.run(home.start()) {
+            Ok((_, f)) => f,
+            Err(_) => {
+                error!("unable to load bot feed");
+                return Vec::new();
+            }
+        };
 
         feed.iter().map(|tweet| tweet.text.to_owned()).collect()
     }

@@ -1,8 +1,8 @@
 use super::actor::Actor;
 
 pub const JERRY: Actor = Actor {
-    name: "jerry".to_string(),
-    lines: JERRY_LINES.iter().map(|&s| String::from(s)).collect(),
+    name: "jerry",
+    lines: &JERRY_LINES,
     markov_order: 2,
 };
 

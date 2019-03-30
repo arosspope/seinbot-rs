@@ -1,4 +1,4 @@
-service: seinbot-twitter-posting
+service: daily-tweet
 provider:
   name: aws
   runtime: rust
@@ -7,6 +7,7 @@ provider:
     SEINBOT_CONSUMER_SECRET: ${file(twitter-secrets.json):consumer_secret}
     SEINBOT_ACCESS_KEY: ${file(twitter-secrets.json):access_key}
     SEINBOT_ACCESS_SECRET: ${file(twitter-secrets.json):access_secret}
+    RUST_BACKTRACE: 1
 plugins:
   - serverless-rust
 package:
