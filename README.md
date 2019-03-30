@@ -33,7 +33,7 @@ functions:
     events:
       - schedule: rate(24 hours)
 ```
-> _Snippet from the serverless.yml file used to deploy to AWS_
+> _Snippet from serverless.yml (used to deploy to AWS)_
 
 Whilst the bot mostly produces nonsensical output, it can sometimes construct something quite amusing (see above tweet). Overall, I am quite happy with final product and would like to thank the following projects that made it so:
 

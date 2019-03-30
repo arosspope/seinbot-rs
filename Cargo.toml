@@ -5,6 +5,10 @@ authors = ["arosspope <andrew.pope456@gmail.com>"]
 edition = "2018"
 description = "A seinfeld twitter bot using markov chains in rust."
 license = "MIT"
+homepage = "https://github.com/arosspope/seinbot-rs.git"
+repository = "https://github.com/arosspope/seinbot-rs.git"
+readme = "README.md"
+keywords = ["markov-chain", "seinfeld", "bot", "text-generation", "lambda"]
 
 [dependencies]
 markov = "1.0"
