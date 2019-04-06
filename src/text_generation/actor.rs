@@ -7,11 +7,11 @@ pub struct Actor {
     pub markov_order: usize,
 }
 
-pub fn choose_actor<'a>(actors: &'a [Actor], ignore: &str) -> &'a Actor {
+pub fn choose_actor<'a>(actors: &'a [Actor], actors_to_ignore: &[String]) -> &'a Actor {
     let mut rng = thread_rng();
     actors
         .into_iter()
-        .filter(|a| a.name != ignore)
+        .filter(|a| !actors_to_ignore.iter().any(|i| a.name == i))
         .collect::<Vec<&Actor>>()
         .choose(&mut rng)
         .expect("choosing actor failed")

@@ -3,7 +3,7 @@ use super::actor::Actor;
 pub const NEWMAN: Actor = Actor {
     name: "newman",
     lines: &NEWMAN_LINES,
-    markov_order: 1,
+    markov_order: 2,
 };
 
 const NEWMAN_LINES: [&str; 1186] = [
@@ -872,7 +872,7 @@ const NEWMAN_LINES: [&str; 1186] = [
   "Huh.",
   "I mean parcels are rarely damaged during shipping. ",
   "I love..",
-  "broccoli, it&rsquo;s, good for you.",
+  "broccoli, it's, good for you.",
   "Thank you.",
   "[inhaling deeply] Jambalaya!",
   "Wow, where did you get that?",

@@ -41,10 +41,10 @@ fn seinbot(_: SeinbotEvent, _: Context) -> Result<(), HandlerError> {
     let mut bot = twitter::TwitterBot::new(conf);
     let history = bot.history(200);
 
-    // Choose the next actor to tweet, ignoring the last one who posted
-    let ignore_actor = last_actor(&history).unwrap_or("".to_string());
+    // Choose the next actor to tweet, ignoring the last 4 who posted
+    let actors_to_ignore = last_actors(&history, 4);
     let actors = vec![JERRY, ELAINE, FRANK, GEORGE, KRAMER, NEWMAN];
-    let actor = choose_actor(&actors, &ignore_actor);
+    let actor = choose_actor(&actors, &actors_to_ignore);
     info!("{} is tweeting", actor.name);
 
     let mut tweet: String;
@@ -74,18 +74,21 @@ fn seinbot(_: SeinbotEvent, _: Context) -> Result<(), HandlerError> {
 }
 
 /// Based on previous tweet history, find the last actor who tweeted
-fn last_actor(tweets: &[String]) -> Option<String> {
-    if tweets.len() > 0 {
-        let actor = tweets[0]
+fn last_actors(tweets: &[String], n: usize) -> Vec<String> {
+    let mut last_actors = Vec::new();
+    for tweet in tweets.iter().take(n) {
+        let actor = tweet
             .split(' ')
             .collect::<Vec<&str>>()
             .first()
             .expect("tweet is not in expected format")
             .replace("[", "")
             .replace("]", "");
-
-        return Some(actor);
+        
+        last_actors.push(actor);
     }
-
-    None
+    
+    info!("last {} actors to post: {:?}", n, last_actors);
+    
+    last_actors
 }
