@@ -21,6 +21,7 @@ use std::error::Error;
 struct SeinbotEvent {}
 
 const TWEET_CHARACTER_LIMIT: usize = 280;
+const MIN_CHARACTER_LIMIT: usize = 50;
 
 fn main() -> Result<(), Box<dyn Error>> {
     simple_logger::init_with_level(log::Level::Debug)?;
@@ -46,10 +47,19 @@ fn seinbot(_: SeinbotEvent, _: Context) -> Result<(), HandlerError> {
     let actors = vec![JERRY, ELAINE, FRANK, GEORGE, KRAMER, NEWMAN];
     let actor = choose_actor(&actors, &actors_to_ignore);
     info!("{} is tweeting", actor.name);
-
+    
+    let mut retries = 0;
     let mut tweet: String;
     loop {
         let statement = generate_dialogue(&actor, 2, 3);
+        
+        // If the statement is too short, generate again - but don't do it forever
+        if (statement.len() < MIN_CHARACTER_LIMIT) && (retries < 100) {
+            debug!("too small: {}", statement);
+            retries += 1;
+            continue;
+        }
+        
         tweet = format!("[{}] {}", actor.name, statement);
 
         // Make sure tweet is within post limit

@@ -1,6 +1,6 @@
 [package]
 name = "seinbot-rs"
-version = "1.0.2"
+version = "1.0.3"
 authors = ["arosspope <andrew.pope456@gmail.com>"]
 edition = "2018"
 description = "A seinfeld twitter bot using markov chains in rust."
