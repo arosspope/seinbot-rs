@@ -1,6 +1,6 @@
 # seinbot-rs
 
-[![Crates.io](https://img.shields.io/crates/v/seinbot-rs.svg)](https://crates.io/crates/seinbot-rs) [![twitter](https://img.shields.io/twitter/follow/seinfeldrustbot.svg?style=social)](https://twitter.com/seinfeldrustbot)
+[![Crates.io](https://img.shields.io/crates/v/seinbot-rs.svg)](https://crates.io/crates/seinbot-rs)
 
 A seinfeld twitter bot using aws lambda functions and markov chains in rust.
 
